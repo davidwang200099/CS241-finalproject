@@ -29,18 +29,19 @@ MainWindow::MainWindow(QWidget *parent)
 
     QHBoxLayout *fromtimelayout=new QHBoxLayout;
 
-    boxes=new QComboBox[4];
+    boxes=new QComboBox*[4];
 
-    fromtimelayout->addWidget(boxes);
-    fromtimelayout->addWidget(boxes+1);
+    for(int i=0;i<4;i++) boxes[i]=new QComboBox;
+    fromtimelayout->addWidget(boxes[0]);
+    fromtimelayout->addWidget(boxes[1]);
 
     QHBoxLayout *totimelayout=new QHBoxLayout;
 
-    totimelayout->addWidget(boxes+2);
-    totimelayout->addWidget(boxes+3);
+    totimelayout->addWidget(boxes[2]);
+    totimelayout->addWidget(boxes[3]);
     layout->addLayout(fromtimelayout,0);
     layout->addLayout(totimelayout,0);
-
+    initProgressBar();
     ui->centralwidget->setLayout(layout);
 
     connect(button_file,&QPushButton::clicked,this,&MainWindow::selectfile);
@@ -48,8 +49,27 @@ MainWindow::MainWindow(QWidget *parent)
     cnt_finish=0;
 }
 
+void MainWindow::initProgressBar() {
+    ui->statusbar->setSizeGripEnabled(true);
+    bar=new QProgressBar(this);
+    bar->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
+    ui->statusbar->addPermanentWidget(bar,1);
+
+    bar->setMinimum(0);
+    bar->setMaximum(100);
+    bar->setValue(100);
+    bar->setVisible(true);
+    qDebug()<<"size of bar: "<<bar->size();
+
+    progress=new QLabel(this);
+    progress->setText("Loading dataset...");
+    ui->statusbar->addPermanentWidget(progress,0);
+    progress->show();
+}
+
 MainWindow::~MainWindow()
 {
+    delete [] boxes;
     delete ui;
 }
 
@@ -85,21 +105,7 @@ void MainWindow::selectfile(){
             if(flag) qDebug()<<"All finished!";
         });
     }
-    ui->statusbar->setSizeGripEnabled(true);
-    bar=new QProgressBar(this);
-    bar->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
-    ui->statusbar->addPermanentWidget(bar,1);
 
-    bar->setMinimum(0);
-    bar->setMaximum(100);
-    bar->setValue(100);
-    bar->setVisible(true);
-    qDebug()<<"size of bar: "<<bar->size();
-
-    progress=new QLabel(this);
-    progress->setText("Loading dataset...");
-    ui->statusbar->addPermanentWidget(progress,0);
-    progress->show();
 }
 
 void MainWindow::on_draw_success(class graphDrawThread *thread) {

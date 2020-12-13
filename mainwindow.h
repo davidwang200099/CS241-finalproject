@@ -54,6 +54,7 @@ private:
     void draw();
     void plot();
     void on_draw_success(class graphDrawThread *thread);
+    void initProgressBar();
     Ui::MainWindow *ui;
     //QPushButton *button;
     QString dirName;
@@ -62,7 +63,7 @@ private:
     QLabel *progress;
     QChartView *view;
     QChart *chart;
-    QComboBox *boxes;
+    QComboBox **boxes;
     //vector<fileReadThread *> threads;
 
     QSqlDatabase db;
