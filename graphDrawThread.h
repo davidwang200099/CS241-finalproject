@@ -7,6 +7,7 @@
 #include <QSqlError>
 #include <QSqlRecord>
 #include <QThread>
+#include <QPointF>
 #include "mainwindow.h"
 #include <vector>
 using namespace std;

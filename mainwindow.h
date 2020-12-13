@@ -24,13 +24,18 @@
 #include <QSpacerItem>
 #include <QChart>
 #include <QChartView>
-QT_CHARTS_USE_NAMESPACE
+#include <QLineEdit>
+#include <QPointF>
+#include <QTime>
+#include <QSplineSeries>
 #include <QComboBox>
 #include "filereadthread.h"
 #include "databasecheckthread.h"
 #include "filereadthread.h"
 #include "FileSelectDialog.h"
 #include "graphDrawThread.h"
+#include "constant.h"
+QT_CHARTS_USE_NAMESPACE
 using namespace std;
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -64,6 +69,7 @@ private:
     QChartView *view;
     QChart *chart;
     QComboBox **boxes;
+    QLineEdit *edit;
     //vector<fileReadThread *> threads;
 
     QSqlDatabase db;
@@ -78,6 +84,8 @@ private:
     int cnt_finish;
     QStringList import_fields;
     QVector<bool> fields_onehot;
+
+    QVector<pair<QPointF, QPointF> > grids;
 
 };
 
