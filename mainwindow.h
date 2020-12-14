@@ -29,6 +29,8 @@
 #include <QTime>
 #include <QSplineSeries>
 #include <QComboBox>
+#include <QDateTimeAxis>
+#include <QTabWidget>
 #include "filereadthread.h"
 #include "databasecheckthread.h"
 #include "filereadthread.h"
@@ -58,6 +60,9 @@ private:
     void on_read_success(class fileReadThread *thread);
     void draw();
     void plot();
+    void plot_spatial_temporal();
+    void plot_fee();
+    void plot_traveltime();
     void on_draw_success(class graphDrawThread *thread);
     void initProgressBar();
     Ui::MainWindow *ui;
@@ -70,10 +75,15 @@ private:
     QChart *chart;
     QComboBox **boxes;
     QLineEdit *edit;
+    QPushButton *button_file;
+    QPushButton *button_draw;
     //vector<fileReadThread *> threads;
 
     QSqlDatabase db;
     QVector<int> order_by_period;
+    QVector<int> order_by_fee;
+    QVector<int> order_by_traveltime;
+    int period;
     //QStringList import_dates;
     //QVector<bool> dates_onehot;
 
@@ -82,6 +92,7 @@ private:
 
     QSemaphore mutex_cntfinish;
     int cnt_finish;
+    int cnt_create;
     QStringList import_fields;
     QVector<bool> fields_onehot;
 

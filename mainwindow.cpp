@@ -9,28 +9,37 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow),mutex_db(1),mutex_cntfinish(1)
 {
+
+    //QTabWidget *tab1=new QTabWidget(this);
+    //QWidget *widget=new QWidget(tab1);
+    //tab1->addTab(widget);
+
+
     ui->setupUi(this);
     this->view=NULL;
     this->chart=NULL;
+    boxes=new QComboBox*[N_BOX];
+    for(int i=0;i<N_BOX;i++) boxes[i]=new QComboBox;
+
     QVBoxLayout *layout=new QVBoxLayout;
 
     QHBoxLayout *buttonlayout=new QHBoxLayout;
-    QPushButton *button_file;
-    QPushButton *button_draw;
+
     QHBoxLayout *viewlayout=new QHBoxLayout;
     viewlayout->addWidget(view=new QChartView);
 
-    buttonlayout->addWidget(button_file=new QPushButton("Import",this));
-    buttonlayout->addWidget(button_draw=new QPushButton("Draw",this));
+    buttonlayout->addWidget(button_file=new QPushButton("Import"));
+    buttonlayout->addWidget(button_draw=new QPushButton("Draw"));
+    buttonlayout->addWidget(boxes[DRAW_FUNC]);
+    boxes[DRAW_FUNC]->addItems(FUNCTION_LIST);
 
+    button_draw->setEnabled(false);
     layout->addLayout(buttonlayout,1);
     layout->addLayout(viewlayout,1);
 
     QHBoxLayout *fromtimelayout=new QHBoxLayout;
 
-    boxes=new QComboBox*[N_BOX];
 
-    for(int i=0;i<N_BOX;i++) boxes[i]=new QComboBox;
 
     fromtimelayout->addWidget(new QLabel("From:"),0);
     fromtimelayout->addWidget(boxes[0],1);
@@ -74,9 +83,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->centralwidget->setLayout(layout);
 
+
+
     connect(button_file,&QPushButton::clicked,this,&MainWindow::selectfile);
     connect(button_draw,&QPushButton::clicked,this,&MainWindow::draw);
     cnt_finish=0;
+    cnt_create=0;
 }
 
 void MainWindow::initProgressBar() {
@@ -89,7 +101,7 @@ void MainWindow::initProgressBar() {
     bar->setMaximum(100);
     bar->setValue(100);
     bar->setVisible(true);
-    qDebug()<<"size of bar: "<<bar->size();
+
 
     progress=new QLabel(this);
     progress->setText("Loading dataset...");
@@ -123,13 +135,6 @@ void MainWindow::selectfile(){
 
     int threadrank=0;
 
-    /*auto endofday=QTime::fromString("23:59","hh:mm");
-    qDebug()<<endofday;
-    for(auto time=QTime::fromString("00:00","hh:mm");time<=endofday;time=time.addSecs(3600)){
-        boxes[1]->addItem(time.toString("hh:mm"));
-        boxes[3]->addItem(time.toString("hh:mm"));
-        qDebug()<<time;
-    }*/
     for(int i=0;i<N_HOUR;i++){
         QString str=(i<10)?"0"+NUMBER(i)+":00":NUMBER(i)+":00";
         boxes[1]->addItem(str);
@@ -142,13 +147,22 @@ void MainWindow::selectfile(){
         boxes[0]->addItem(str);
         boxes[2]->addItem(str);
         thread->start();
+        cnt_create++;
         connect(thread, &fileReadThread::success, [=](fileReadThread *thread){
+            //qDebug()<<QThread::currentThread();
+            //qDebug()<<thread->currentThread();
             bool flag=false;
             mutex_cntfinish.acquire();
             cnt_finish++;
-            if(cnt_finish==threadrank) flag=true;
+            //qDebug()<<(&threadrank);
+            //qDebug()<<cnt_finish<<" "<<threadrank;
+            if(cnt_finish==cnt_create) flag=true;
             mutex_cntfinish.release();
-            if(flag) qDebug()<<"All finished!";
+            if(flag) {
+                qDebug()<<"All finished!";
+                button_draw->setEnabled(true);
+            }
+            //thread->deleteLater();
         });
     }
 
@@ -162,7 +176,7 @@ void MainWindow::selectfile(){
     while(!in.atEnd()){
         QStringList l=in.readLine().trimmed().split(',');
         QPointF lefttop(l[1].toFloat(),l[2].toFloat());
-        QPointF rightbottom(l[7].toFloat(),l[8].toFloat());
+        QPointF rightbottom(l[5].toFloat(),l[6].toFloat());
         grids.push_back(pair<QPointF, QPointF>(lefttop,rightbottom));
     }
 }
@@ -206,7 +220,7 @@ void MainWindow::draw() {
         default:
             b=60;
     }
-    auto thread=new graphDrawThread(this,a*b);
+    auto thread=new graphDrawThread(this,period=a*b, boxes[DRAW_FUNC]->currentIndex());
     connect(thread,&graphDrawThread::success,this,&MainWindow::plot);
     thread->start();
 }
@@ -220,41 +234,134 @@ void MainWindow::plot() {
         //delete view;
     }
 
-
-    chart=new QChart;
-    QSplineSeries *series=new QSplineSeries();
-
-    int max=-1;
-    for(int i=0;i<order_by_period.size();i++) {
-        if(order_by_period[i]>max) max=order_by_period[i];
-        series->append(i, order_by_period[i]);
+    switch(boxes[DRAW_FUNC]->currentIndex()) {
+        case 0:
+            plot_spatial_temporal();
+            break;
+        case 1:
+            plot_traveltime();
+            break;
+        case 2:
+            plot_fee();
+            break;
     }
-    int period=order_by_period.size();
-    QValueAxis *x=new QValueAxis;
-    x->setRange(0, period);
-    x->setLabelFormat("%d");
-    x->setTickCount(period+1);
+}
 
-    QValueAxis *y=new QValueAxis;
-    y->setRange(0, max);
+void MainWindow::plot_traveltime() {
+    QChart *old=NULL;
+    if(chart) {
+        qDebug()<<"delete chart!";
+        QChart *old=chart;
+    }
+    chart = new QChart;
+    QSplineSeries *series = new QSplineSeries();
+
+    QDateTime startdatetime = DT(boxes[0]->currentText() + "-" + boxes[1]->currentText() + ":00",
+                                 "yyyy-MM-dd-hh:mm:ss");
+    QDateTime enddatetime = DT(boxes[2]->currentText() + "-" + boxes[3]->currentText() + ":00",
+                               "yyyy-MM-dd-hh:mm:ss");
+
+    int max = -1;
+    for(int i=0;i<order_by_fee.size();i++) {
+        qDebug() << order_by_traveltime[i];
+        if (order_by_fee[i] > max) max = order_by_traveltime[i];
+
+        series->append(i, order_by_traveltime[i]);
+    }
+
+    QValueAxis *x=new QValueAxis;
+
+    QValueAxis *y = new QValueAxis;
+    //y->setRange(0, max);
     y->setLabelFormat("%d");
 
-
+    series->setName("fee of order");
     chart->addSeries(series);
-    chart->setAxisX(x,series);
-    chart->setAxisY(y,series);
-    //window->view->setChart(chart);
-    //window->view->show();
+    chart->setAxisX(x, series);
+    chart->setAxisY(y, series);
 
     view->setChart(chart);
     view->show();
-    if(old) delete old;
+    if (old) delete old;
 
-    /*qDebug()<<"view = "<<view;
-    qDebug()<<"chart = "<<chart;
-    qDebug()<<"chart+16= "<<((char *)chart+0x10);
-    qDebug()<<"series->parent() = "<<series->parent();
-    qDebug()<<"series->parent()->parent() = "<<series->parent()->parent();
-    qDebug()<<"x->parent() = "<<x->parent();
-    qDebug()<<"x->parent()->parent() = "<<x->parent()->parent();*/
+}
+
+void MainWindow::plot_spatial_temporal() {
+    QChart *old=NULL;
+    if(chart) {
+        qDebug()<<"delete chart!";
+        QChart *old=chart;
+    }
+    chart = new QChart;
+    QSplineSeries *series = new QSplineSeries();
+
+    QDateTime startdatetime = DT(boxes[0]->currentText() + "-" + boxes[1]->currentText() + ":00",
+                                 "yyyy-MM-dd-hh:mm:ss");
+    QDateTime enddatetime = DT(boxes[2]->currentText() + "-" + boxes[3]->currentText() + ":00",
+                               "yyyy-MM-dd-hh:mm:ss");
+
+    int max = -1;
+    qDebug() << "In MainWindow, period=" << period;
+    for (int i = 0; i < order_by_period.size(); i++) {
+        qDebug() << order_by_period[i];
+        if (order_by_period[i] > max) max = order_by_period[i];
+        series->append(startdatetime.addSecs(i * period).toMSecsSinceEpoch(), order_by_period[i]);
+    }
+    QDateTimeAxis *x = new QDateTimeAxis;
+    x->setTickCount(24);
+    x->setLabelsAngle(-90);
+    x->setFormat("yyyy-MM-dd hh:mm");
+
+    QValueAxis *y = new QValueAxis;
+    //y->setRange(0, max);
+    y->setLabelFormat("%d");
+
+    series->setName("num. of order");
+    chart->addSeries(series);
+    chart->setAxisX(x, series);
+    chart->setAxisY(y, series);
+
+    view->setChart(chart);
+    view->show();
+    if (old) delete old;
+}
+
+void MainWindow::plot_fee() {
+    QChart *old=NULL;
+    if(chart) {
+        qDebug()<<"delete chart!";
+        QChart *old=chart;
+        //view->close();
+        //delete view;
+    }
+    chart = new QChart;
+    QSplineSeries *series = new QSplineSeries();
+
+    QDateTime startdatetime = DT(boxes[0]->currentText() + "-" + boxes[1]->currentText() + ":00",
+                                 "yyyy-MM-dd-hh:mm:ss");
+    QDateTime enddatetime = DT(boxes[2]->currentText() + "-" + boxes[3]->currentText() + ":00",
+                               "yyyy-MM-dd-hh:mm:ss");
+
+    int max = -1;
+
+    for(int i=0;i<order_by_fee.size();i++) {
+        qDebug() << order_by_fee[i];
+        if (order_by_fee[i] > max) max = order_by_fee[i];
+
+        series->append(i, order_by_fee[i]);
+    }
+    QValueAxis *x=new QValueAxis;
+
+    QValueAxis *y = new QValueAxis;
+    //y->setRange(0, max);
+    y->setLabelFormat("%d");
+
+    series->setName("fee of order");
+    chart->addSeries(series);
+    chart->setAxisX(x, series);
+    chart->setAxisY(y, series);
+
+    view->setChart(chart);
+    view->show();
+    if (old) delete old;
 }

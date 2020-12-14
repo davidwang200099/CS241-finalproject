@@ -27,7 +27,7 @@ void fileReadThread::run(){
 
     QString create_sql=QString("CREATE TABLE order_%1 (id VARCHAR(50) PRIMARY KEY").arg(date);
     QStringList query_list=QStringList{"departure_time INT","end_time INT",
-                                       "orig_lng INT","orig_lat INT",
+                                       "orig_lng FLOAT","orig_lat FLOAT",
                                        "dest_lng FLOAT","dest_lat FLOAT","fee FLOAT" };
     auto _size=window->import_fields.size();
     for(int i=1;i<_size;i++) {
