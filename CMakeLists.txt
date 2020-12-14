@@ -15,6 +15,6 @@ find_package(Qt5Sql REQUIRED)
 find_package(Qt5Charts REQUIRED)
 
 
-add_executable(final main.cpp filereadthread.cpp mainwindow.cpp databasecheckthread.cpp FileSelectDialog.cpp graphDrawThread.cpp)
+add_executable(final main.cpp filereadthread.cpp mainwindow.cpp databasecheckthread.cpp FileSelectDialog.cpp graphDrawThread.cpp freeQueryThread.cpp predictionThread.cpp predictionThread.h)
 
 target_link_libraries(final Qt5::Widgets Qt5::Sql Qt5::Charts)

@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QLineSeries>
 #include <QChart>
 #include <QChartView>
 #include <QValueAxis>
@@ -9,12 +8,28 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow),mutex_db(1),mutex_cntfinish(1)
 {
+     initBasicVisTab();
+     initAdvancedTab();
+}
 
-    //QTabWidget *tab1=new QTabWidget(this);
-    //QWidget *widget=new QWidget(tab1);
-    //tab1->addTab(widget);
+void MainWindow::initAdvancedTab() {
+    QVBoxLayout *layout=new QVBoxLayout;
 
+    QHBoxLayout *querylayout=new QHBoxLayout;
+    queryedit=new QLineEdit;
+    querylayout->addWidget(queryedit,1);
+    QPushButton *querybutton=new QPushButton;
+    querybutton->setText("Query!");
+    querylayout->addWidget(querybutton,0);
+    connect(querybutton,&QPushButton::clicked,this,&MainWindow::freequery);
+    layout->addLayout(querylayout,0);
+    datatable=new QTableWidget;
+    layout->addWidget(datatable,1);
 
+    ui->tab_advanced->setLayout(layout);
+}
+
+void MainWindow::initBasicVisTab() {
     ui->setupUi(this);
     this->view=NULL;
     this->chart=NULL;
@@ -80,8 +95,7 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     layout->addLayout(citygridlayout,0);
-
-    ui->centralwidget->setLayout(layout);
+    ui->tab_basic->setLayout(layout);
 
 
 
@@ -89,6 +103,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(button_draw,&QPushButton::clicked,this,&MainWindow::draw);
     cnt_finish=0;
     cnt_create=0;
+
+    qDebug()<<"centralwidget: "<<ui->centralwidget->size();
+    qDebug()<<"tabwidget: "<<ui->tabwidget->size();
+    qDebug()<<"tab_basic: "<<ui->tab_basic->size();
 }
 
 void MainWindow::initProgressBar() {
@@ -364,4 +382,9 @@ void MainWindow::plot_fee() {
     view->setChart(chart);
     view->show();
     if (old) delete old;
+}
+
+void MainWindow::freequery() {
+    freeQueryThread * thread=new freeQueryThread(this);
+    thread->start();
 }

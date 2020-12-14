@@ -31,12 +31,14 @@
 #include <QComboBox>
 #include <QDateTimeAxis>
 #include <QTabWidget>
+#include <QTableWidget>
 #include "filereadthread.h"
 #include "databasecheckthread.h"
 #include "filereadthread.h"
 #include "FileSelectDialog.h"
 #include "graphDrawThread.h"
 #include "constant.h"
+#include "freeQueryThread.h"
 QT_CHARTS_USE_NAMESPACE
 using namespace std;
 QT_BEGIN_NAMESPACE
@@ -50,6 +52,7 @@ class MainWindow : public QMainWindow
     friend class FileSelectDialog;
     friend class fileReadThread;
     friend class graphDrawThread;
+    friend class freeQueryThread;
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -57,6 +60,7 @@ public:
 private:
     void checkDatabase();
     void selectfile();
+    void freequery();
     void on_read_success(class fileReadThread *thread);
     void draw();
     void plot();
@@ -65,6 +69,8 @@ private:
     void plot_traveltime();
     void on_draw_success(class graphDrawThread *thread);
     void initProgressBar();
+    void initBasicVisTab();
+    void initAdvancedTab();
     Ui::MainWindow *ui;
     //QPushButton *button;
     QString dirName;
@@ -77,6 +83,8 @@ private:
     QLineEdit *edit;
     QPushButton *button_file;
     QPushButton *button_draw;
+    QTableWidget *datatable;
+    QLineEdit *queryedit;
     //vector<fileReadThread *> threads;
 
     QSqlDatabase db;
