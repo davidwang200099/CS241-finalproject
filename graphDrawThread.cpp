@@ -88,7 +88,6 @@ void graphDrawThread::spatial_temporal() {
     }
     qDebug()<<"Finished!";
 
-    db.close();
     emit success(this);
 }
 
@@ -112,7 +111,7 @@ void graphDrawThread::fee_distribution() {
     auto i1=window->boxes[LONG]->currentIndex()-1;
     auto i2=window->boxes[LAT]->currentIndex()-1;
     if(window->fields_onehot[3]&&window->fields_onehot[4]&&i1>=0&&i2>=0){
-        auto gridrank=i1*i2;
+        auto gridrank=i1+i2*10;
         qDebug()<<gridrank;
         QPointF lefttop=window->grids[gridrank].first;
         QPointF rightbottom=window->grids[gridrank].second;
@@ -178,7 +177,7 @@ void graphDrawThread::traveltime_distribution() {
     auto i1=window->boxes[LONG]->currentIndex()-1;
     auto i2=window->boxes[LAT]->currentIndex()-1;
     if(window->fields_onehot[3]&&window->fields_onehot[4]&&i1>=0&&i2>=0){
-        auto gridrank=i1*i2;
+        auto gridrank=i1+i2*10;
         qDebug()<<gridrank;
         QPointF lefttop=window->grids[gridrank].first;
         QPointF rightbottom=window->grids[gridrank].second;

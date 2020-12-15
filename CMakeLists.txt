@@ -13,8 +13,10 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} /Users/macbookpro/Qt/5.15.2/clang_64/
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5Sql REQUIRED)
 find_package(Qt5Charts REQUIRED)
+find_package(Qt5Location REQUIRED)
+find_package(Qt5Qml REQUIRED)
 
 
-add_executable(final main.cpp filereadthread.cpp mainwindow.cpp databasecheckthread.cpp FileSelectDialog.cpp graphDrawThread.cpp freeQueryThread.cpp predictionThread.cpp predictionThread.h)
+add_executable(final main.cpp filereadthread.cpp mainwindow.cpp databasecheckthread.cpp FileSelectDialog.cpp graphDrawThread.cpp freeQueryThread.cpp predictionThread.cpp)
 
-target_link_libraries(final Qt5::Widgets Qt5::Sql Qt5::Charts)
+target_link_libraries(final Qt5::Widgets Qt5::Sql Qt5::Charts Qt5::Qml)

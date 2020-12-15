@@ -32,6 +32,7 @@
 #include <QDateTimeAxis>
 #include <QTabWidget>
 #include <QTableWidget>
+#include <QTextEdit>
 #include "filereadthread.h"
 #include "databasecheckthread.h"
 #include "filereadthread.h"
@@ -39,6 +40,7 @@
 #include "graphDrawThread.h"
 #include "constant.h"
 #include "freeQueryThread.h"
+#include "predictionThread.h"
 QT_CHARTS_USE_NAMESPACE
 using namespace std;
 QT_BEGIN_NAMESPACE
@@ -53,6 +55,7 @@ class MainWindow : public QMainWindow
     friend class fileReadThread;
     friend class graphDrawThread;
     friend class freeQueryThread;
+    friend class predictionThread;
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -61,7 +64,10 @@ private:
     void checkDatabase();
     void selectfile();
     void freequery();
+    void predict();
     void on_read_success(class fileReadThread *thread);
+    void on_predict_success(class predictionThread *thread);
+    void on_query_success(class freeQueryThread *thread);
     void draw();
     void plot();
     void plot_spatial_temporal();
@@ -71,6 +77,7 @@ private:
     void initProgressBar();
     void initBasicVisTab();
     void initAdvancedTab();
+    void initPredictionTab();
     Ui::MainWindow *ui;
     //QPushButton *button;
     QString dirName;
@@ -80,20 +87,19 @@ private:
     QChartView *view;
     QChart *chart;
     QComboBox **boxes;
+    QComboBox **predictboxes;
     QLineEdit *edit;
     QPushButton *button_file;
     QPushButton *button_draw;
     QTableWidget *datatable;
+    QTextEdit *predictedit;
     QLineEdit *queryedit;
-    //vector<fileReadThread *> threads;
-
+    QLineEdit *timeedit;
     QSqlDatabase db;
     QVector<int> order_by_period;
     QVector<int> order_by_fee;
     QVector<int> order_by_traveltime;
     int period;
-    //QStringList import_dates;
-    //QVector<bool> dates_onehot;
 
     QString from_date;
     QString to_date;
@@ -105,6 +111,10 @@ private:
     QVector<bool> fields_onehot;
 
     QVector<pair<QPointF, QPointF> > grids;
+    float grid_north;
+    float grid_south;
+    float grid_west;
+    float grid_east;
 
 };
 

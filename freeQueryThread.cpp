@@ -3,7 +3,7 @@
 //
 
 #include "freeQueryThread.h"
-
+#include <QSqlQueryModel>
 void freeQueryThread::run() {
 
     window->datatable->clear();
@@ -19,18 +19,38 @@ void freeQueryThread::run() {
 
     QStringList header;
 
-    if(!parse(querystr,header)) {
+    /*if(!parse(querystr,header)) {
         emit fail(this);
         return;
     }
 
     for(auto i=0;i<header.size();i++) qDebug()<<header[i];
 
-    auto _size=header.size();
+    auto _size=header.size();*/
 
     query.exec(querystr);
 
+    QSqlQueryModel model;
+    model.setQuery(query);
+
+    int num_column=model.columnCount();
+
+    for(int i=0;i<window->fields_onehot.size();i++)
+        if(window->fields_onehot[i]) header.push_back(window->import_fields[i]);
+
     while(query.next()){
+        QStringList l;
+        for(int i=0;i<num_column;i++) l.append(query.value(i).toString());
+        records.push_back(l);
+    }
+
+    window->datatable->setColumnCount(num_column);
+    window->datatable->setRowCount(records.size()+1);
+    window->datatable->setHorizontalHeaderLabels(header);
+    for(auto i=0;i<records.size();i++){
+        for(auto j=0;j<header.size();j++) window->datatable->setItem(i,j,new QTableWidgetItem(records[i][j]));
+    }
+    /*while(query.next()){
         QStringList l;
         for(int i=0;i<_size;i++)
             l.append(query.value(i).toString());
@@ -44,8 +64,9 @@ void freeQueryThread::run() {
     window->datatable->setHorizontalHeaderLabels(header);
     for(auto i=0;i<records.size();i++){
         for(auto j=0;j<header.size();j++) window->datatable->setItem(i,j,new QTableWidgetItem(records[i][j]));
-    }
+    }*/
 
+    //db.close();
     //query.exec(querystr);
 
     /*while(query.next()){

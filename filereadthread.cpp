@@ -81,7 +81,7 @@ void fileReadThread::run(){
             }
             insert_sql += ")";
             //qDebug()<<insert_sql;
-            mutex_db->acquire();
+            //mutex_db->acquire();
             /*if(!query.exec(QString("INSERT INTO order_%1 VALUES('%2',%3,%4,%5,%6,%7,%8,%9)").arg(
                     date,l[0],l[1],l[2],l[3],l[4],l[5],l[6],l[7]
             )))*/
@@ -91,7 +91,7 @@ void fileReadThread::run(){
                 mutex_db->release();
                 return;
             }
-            mutex_db->release();
+            //mutex_db->release();
             insert_sql=QString("INSERT INTO order_%1 VALUES(").arg(date);
         }
         qDebug()<<QString("Thread %1 has just read %2").arg(NUMBER(threadRank),filename);

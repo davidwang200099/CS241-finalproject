@@ -23,5 +23,6 @@
 #define DT QDateTime::fromString
 
 #define FUNCTION_LIST QStringList{"Spatial-Temporal Data","Distribution of Travel Time","Distribution of Fee"}
+#define PREDICT_LIST QStringList{"Destination Prediction","Travel Time Prediction"}
 
 #endif //FINAL_CONSTANT_H

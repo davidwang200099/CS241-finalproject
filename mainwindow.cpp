@@ -10,6 +10,50 @@ MainWindow::MainWindow(QWidget *parent)
 {
      initBasicVisTab();
      initAdvancedTab();
+     initPredictionTab();
+}
+
+void MainWindow::initPredictionTab() {
+    //QVBoxLayout *layout=new QVBoxLayout;
+
+    //layout->addWidget(new QChartView());
+
+    QVBoxLayout *predictlayout=new QVBoxLayout;
+
+    QHBoxLayout *fromplacelayout=new QHBoxLayout;
+    QHBoxLayout *toplacelayout=new QHBoxLayout;
+
+    predictboxes=new QComboBox *[5];
+    for(int i=0;i<5;i++) predictboxes[i]=new QComboBox;
+    fromplacelayout->addWidget(new QLabel("From:"),0);
+    fromplacelayout->addWidget(predictboxes[0],1);
+    fromplacelayout->addWidget(predictboxes[1],1);
+
+    QHBoxLayout *totimelayout=new QHBoxLayout;
+    toplacelayout->addWidget(new QLabel("To:  "),0);
+    toplacelayout->addWidget(predictboxes[2],1);
+    toplacelayout->addWidget(predictboxes[3],1);
+
+    for(int i=0;i<4;i++){
+        qDebug()<<i;
+        for(int j=0;j<10;j++) predictboxes[i]->addItem(NUMBER(j));
+    }
+
+    predictlayout->addWidget(predictedit=new QTextEdit);
+    predictlayout->addLayout(fromplacelayout,0);
+    predictlayout->addLayout(toplacelayout,0);
+
+    QHBoxLayout *timelayout=new QHBoxLayout;
+    timelayout->addWidget(timeedit=new QLineEdit,1);
+
+    timelayout->addWidget(predictboxes[4],1);
+    predictboxes[4]->addItems(PREDICT_LIST);
+
+    QPushButton *button=new QPushButton;
+    timelayout->addWidget(button,0);
+    predictlayout->addLayout(timelayout,0);
+    connect(button,&QPushButton::clicked,this,&MainWindow::predict);
+    ui->tab_predict->setLayout(predictlayout);
 }
 
 void MainWindow::initAdvancedTab() {
@@ -53,8 +97,6 @@ void MainWindow::initBasicVisTab() {
     layout->addLayout(viewlayout,1);
 
     QHBoxLayout *fromtimelayout=new QHBoxLayout;
-
-
 
     fromtimelayout->addWidget(new QLabel("From:"),0);
     fromtimelayout->addWidget(boxes[0],1);
@@ -191,11 +233,21 @@ void MainWindow::selectfile(){
 
     in.readLine();
 
+    grid_north=0.0;
+    grid_south=90.0;
+    grid_east=0.0;
+    grid_west=180.0;
+
     while(!in.atEnd()){
+        float a,b,c,d;
         QStringList l=in.readLine().trimmed().split(',');
-        QPointF lefttop(l[1].toFloat(),l[2].toFloat());
-        QPointF rightbottom(l[5].toFloat(),l[6].toFloat());
+        QPointF lefttop(a=l[1].toFloat(),b=l[2].toFloat());
+        QPointF rightbottom(c=l[5].toFloat(),d=l[6].toFloat());
         grids.push_back(pair<QPointF, QPointF>(lefttop,rightbottom));
+        if(grid_north<b) grid_north=b;
+        if(grid_south>d) grid_south=d;
+        if(grid_east<c) grid_east=c;
+        if(grid_west>a) grid_west=a;
     }
 }
 
@@ -387,4 +439,20 @@ void MainWindow::plot_fee() {
 void MainWindow::freequery() {
     freeQueryThread * thread=new freeQueryThread(this);
     thread->start();
+    connect(thread, &freeQueryThread::success,this,&MainWindow::on_query_success);
+}
+
+void MainWindow::predict() {
+    predictedit->clear();
+    predictionThread *thread=new predictionThread(this);
+    thread->start();
+    connect(thread,&predictionThread::success,this,&MainWindow::on_predict_success);
+}
+
+void MainWindow::on_predict_success(class predictionThread *thread) {
+    thread->deleteLater();
+}
+
+void MainWindow::on_query_success(class freeQueryThread *thread) {
+    thread->deleteLater();
 }
