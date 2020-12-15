@@ -13,7 +13,9 @@ bool operator<(const order_t &order1, const order_t &order2){
 }
 
 void predictionThread::run() {
+
     db=this->window->db;
+    window->mutex_db.acquire();
     qDebug()<<"Begin!";
     //QSqlQuery query(db);
     db.open();
@@ -28,6 +30,7 @@ void predictionThread::run() {
         default:
             emit fail(this);
     }
+    window->mutex_db.release();
 }
 
 pair<int, int> getGridID(float north, float south, float west, float east, float lng, float lat){
@@ -177,7 +180,7 @@ void predictionThread::predictTravelTime() {
 
     }
     sort(periods.begin(),periods.end());
-    QString ans=QString("From Grid No.%1(%2 °E ~ %3 °E, %4 °N ~ %5 °N) ").arg(
+    QString ans=QString("\nFrom Grid No.%1(%2 °E ~ %3 °E, %4 °N ~ %5 °N) ").arg(
             NUMBER(fromrow*10+fromcol),
             NUMBER(fromtopleft.x()),NUMBER(frombottomright.x()),NUMBER(frombottomright.y()),NUMBER(fromtopleft.y())
     )+QString("to Grid No.%1(%2 °E ~ %3 °E, %4 °N ~ %5 °N)").arg(
@@ -186,10 +189,56 @@ void predictionThread::predictTravelTime() {
     );
     window->predictedit->append(ans);
     window->predictedit->append(QString("Number of records: %1\n").arg(periods.size()));
+    qDebug()<<periods.size();
     if(periods.size()==0) {emit success(this);return;}
-    window->predictedit->append(QString("Maximum: %1\n").arg(NUMBER(periods[periods.size()-1])));
-    window->predictedit->append(QString("Minimum: %1\n").arg(NUMBER(periods[0])));
-    window->predictedit->append(QString("Midst: %1\n").arg(NUMBER(periods[periods.size()/2])));
+
+    if(periods[periods.size()-1]<=60)
+        window->predictedit->append(QString("Maximum: %1 s.\n").arg(NUMBER(periods[periods.size()-1])));
+    else{
+        int seconds=periods[periods.size()-1];
+        if(seconds<=3600)
+            window->predictedit->append(QString("Maximum: %1 min, %2 s.\n").arg(
+                    NUMBER(seconds/60),NUMBER(seconds-60*(seconds/60))));
+        else{
+            window->predictedit->append(QString("Maximum: %1 h, %2 min, %3 s.\n").arg(
+                    NUMBER(seconds/3600),
+                    NUMBER((seconds-3600*(seconds/3600))/60),
+                            NUMBER(seconds-60*(seconds/60))));
+        }
+    }
+
+    if(periods[0]<=60)
+        window->predictedit->append(QString("Minimum: %1 s.\n").arg(NUMBER(periods[periods.size()-1])));
+    else{
+        int seconds=periods[0];
+        if(periods[periods.size()-1<=3600])
+            window->predictedit->append(QString("Minimum: %1 min, %2 s.\n").arg(
+                    NUMBER(seconds/60),NUMBER(seconds-60*(seconds/60))));
+        else{
+            window->predictedit->append(QString("Minimum: %1 h, %2 min, %3 s.\n").arg(
+                    NUMBER(seconds/3600),
+                    NUMBER((seconds-3600*(seconds/3600))/60),
+                    NUMBER(seconds-60*(seconds/60))));
+        }
+    }
+
+    if(periods[periods.size()/2]<=60)
+        window->predictedit->append(QString("Midst: %1 s.\n").arg(NUMBER(periods[periods.size()-1])));
+    else{
+        int seconds=periods[periods.size()/2];
+        if(seconds<=3600)
+            window->predictedit->append(QString("Midst: %1 min, %2 s.\n").arg(
+                    NUMBER(seconds/60),NUMBER(seconds-60*(seconds/60))));
+        else{
+            window->predictedit->append(QString("Midst: %1 h, %2 min, %3 s.\n").arg(
+                    NUMBER(seconds/3600),
+                    NUMBER((seconds-3600*(seconds/3600))/60),
+                    NUMBER(seconds-60*(seconds/60))));
+        }
+    }
+
+    //window->predictedit->append(QString("Minimum: %1\n").arg(NUMBER(periods[0])));
+    //window->predictedit->append(QString("Midst: %1\n").arg(NUMBER(periods[periods.size()/2])));
     emit success(this);
 }
 

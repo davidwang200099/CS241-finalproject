@@ -15,18 +15,9 @@ void freeQueryThread::run() {
     QSqlQuery query(db);
     db.open();
 
-    QVector<QStringList> records;
+    //QVector<QStringList> records;
 
-    QStringList header;
-
-    /*if(!parse(querystr,header)) {
-        emit fail(this);
-        return;
-    }
-
-    for(auto i=0;i<header.size();i++) qDebug()<<header[i];
-
-    auto _size=header.size();*/
+    //QStringList header;
 
     query.exec(querystr);
 
@@ -36,53 +27,34 @@ void freeQueryThread::run() {
     int num_column=model.columnCount();
 
     for(int i=0;i<window->fields_onehot.size();i++)
-        if(window->fields_onehot[i]) header.push_back(window->import_fields[i]);
+        if(window->fields_onehot[i]) window->tableheader.push_back(window->import_fields[i]);
+
 
     while(query.next()){
         QStringList l;
-        for(int i=0;i<num_column;i++) l.append(query.value(i).toString());
-        records.push_back(l);
+        for(int i=0;i<num_column;i++) l.push_back(query.value(i).toString());
+        window->records.push_back(l);
     }
 
     window->datatable->setColumnCount(num_column);
-    window->datatable->setRowCount(records.size()+1);
-    window->datatable->setHorizontalHeaderLabels(header);
-    for(auto i=0;i<records.size();i++){
-        for(auto j=0;j<header.size();j++) window->datatable->setItem(i,j,new QTableWidgetItem(records[i][j]));
-    }
-    /*while(query.next()){
-        QStringList l;
-        for(int i=0;i<_size;i++)
-            l.append(query.value(i).toString());
-        records.push_back(l);
-    }
+    window->datatable->setRowCount(window->records.size()+1);
 
-    qDebug()<<records.size();
-
-    window->datatable->setColumnCount(header.size());
-    window->datatable->setRowCount(records.size()+1);
-    window->datatable->setHorizontalHeaderLabels(header);
-    for(auto i=0;i<records.size();i++){
-        for(auto j=0;j<header.size();j++) window->datatable->setItem(i,j,new QTableWidgetItem(records[i][j]));
+    window->datatable->setHorizontalHeaderLabels(window->tableheader);
+    /*for(auto i=0;i<window->records.size();i++){
+        for(auto j=0;j<window->tableheader.size();j++) window->datatable->setItem(i,j,new QTableWidgetItem(window->records[i][j]));
     }*/
-
-    //db.close();
-    //query.exec(querystr);
-
-    /*while(query.next()){
-
-    }*/
+    emit success(this);
 }
 
-bool isValidArgNameStart(QChar ch){
+/*bool isValidArgNameStart(QChar ch){
     return ch.isLetter()||ch==QChar('_');
 }
 
 bool isValidArgName(QChar ch){
     return ch.isDigit()||ch.isLetter()||ch==QChar('_');
-}
+}*/
 
-bool freeQueryThread::parse(QString querystr, QStringList &header){
+/*bool freeQueryThread::parse(QString querystr, QStringList &header){
     //qDebug()<<QString("\t\t    a        b\t\t\t\t\t\t\t\tc\t  ").simplified();
     //qDebug()<<isValidArgName(QChar(' '));
     if(!querystr.startsWith("SELECT",Qt::CaseInsensitive)) {
@@ -124,5 +96,5 @@ bool freeQueryThread::parse(QString querystr, QStringList &header){
     }
     qDebug()<<"Finished!";
     return true;
-}
+}*/
 

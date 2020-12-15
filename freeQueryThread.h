@@ -11,17 +11,22 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QWidgetItem>
+#include <QMetaType>
 #include "mainwindow.h"
 
 class freeQueryThread: public QThread {
     Q_OBJECT
+
 public:
-    freeQueryThread(class MainWindow *window):window(window){}
+    freeQueryThread(class MainWindow *window):window(window){
+        qRegisterMetaType< QVector<int> >("QVector<int>");
+        qRegisterMetaType< Qt::Orientation>("Qt::Orientation");
+    }
 
 private:
     void run();
     class MainWindow *window;
-    bool parse(QString querystr,QStringList &header);
+    //bool parse(QString querystr,QStringList &header);
 signals:
     void success(freeQueryThread *thread);
     void fail(freeQueryThread *thread);

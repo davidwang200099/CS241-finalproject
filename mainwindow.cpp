@@ -52,7 +52,20 @@ void MainWindow::initPredictionTab() {
     QPushButton *button=new QPushButton;
     timelayout->addWidget(button,0);
     predictlayout->addLayout(timelayout,0);
-    connect(button,&QPushButton::clicked,this,&MainWindow::predict);
+    connect(button,&QPushButton::clicked,[=](){
+        qDebug()<<button;
+        //button->setEnabled(false);
+        predictionThread *thread=new predictionThread(this);
+        thread->start();
+        qDebug()<<"create!";
+        connect(thread,&predictionThread::success,[=](predictionThread *thread){
+            qDebug()<<button;
+
+            button->setEnabled(true);
+            thread->exit(0);
+            thread->deleteLater();
+        });
+    });
     ui->tab_predict->setLayout(predictlayout);
 }
 
@@ -65,7 +78,23 @@ void MainWindow::initAdvancedTab() {
     QPushButton *querybutton=new QPushButton;
     querybutton->setText("Query!");
     querylayout->addWidget(querybutton,0);
-    connect(querybutton,&QPushButton::clicked,this,&MainWindow::freequery);
+    connect(querybutton,&QPushButton::clicked,[=](){
+        freeQueryThread *thread=new freeQueryThread(this);
+        thread->start();
+        querybutton->setEnabled(false);
+        records.clear();
+        tableheader.clear();
+        connect(thread,&freeQueryThread::success,[=](freeQueryThread *thread){
+            //querybutton->setEnabled(false);
+            querybutton->setEnabled(true);
+            thread->exit(0);
+            thread->deleteLater();
+            for(auto i=0;i<records.size();i++){
+                for(auto j=0;j<tableheader.size();j++) datatable->setItem(i,j,new QTableWidgetItem(records[i][j]));
+            }
+
+        });
+    });
     layout->addLayout(querylayout,0);
     datatable=new QTableWidget;
     layout->addWidget(datatable,1);
@@ -176,7 +205,7 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::selectfile(){
-
+    button_file->setEnabled(false);
     //dirName="/Users/macbookpro/Downloads/Dataset-CS241-2020";
     QDir dir(dirName);
     dir.setFilter(QDir::Files);
@@ -269,6 +298,7 @@ int MainWindow::askUser() {
 void MainWindow::draw() {
     //if(view) delete view;
     //view=new QChartView(this);
+    button_draw->setEnabled(false);
     if(boxes[FROM_DATE]->currentIndex()==boxes[TO_DATE]->currentIndex() && boxes[FROM_HOUR]->currentIndex()==boxes[TO_HOUR]->currentIndex()){
         QMessageBox msg;
         msg.setText("FROM equals TO! Please choose a period!");
@@ -296,6 +326,7 @@ void MainWindow::draw() {
 }
 
 void MainWindow::plot() {
+    button_draw->setEnabled(true);
     QChart *old=NULL;
     if(chart) {
         qDebug()<<"delete chart!";
@@ -436,17 +467,18 @@ void MainWindow::plot_fee() {
     if (old) delete old;
 }
 
-void MainWindow::freequery() {
+/*void MainWindow::freequery() {
     freeQueryThread * thread=new freeQueryThread(this);
     thread->start();
     connect(thread, &freeQueryThread::success,this,&MainWindow::on_query_success);
 }
 
 void MainWindow::predict() {
-    predictedit->clear();
+    //predictedit->clear();
     predictionThread *thread=new predictionThread(this);
     thread->start();
     connect(thread,&predictionThread::success,this,&MainWindow::on_predict_success);
+
 }
 
 void MainWindow::on_predict_success(class predictionThread *thread) {
@@ -455,4 +487,4 @@ void MainWindow::on_predict_success(class predictionThread *thread) {
 
 void MainWindow::on_query_success(class freeQueryThread *thread) {
     thread->deleteLater();
-}
+}*/

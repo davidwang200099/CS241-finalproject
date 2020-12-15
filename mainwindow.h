@@ -63,8 +63,8 @@ public:
 private:
     void checkDatabase();
     void selectfile();
-    void freequery();
-    void predict();
+    //void freequery();
+    //void predict();
     void on_read_success(class fileReadThread *thread);
     void on_predict_success(class predictionThread *thread);
     void on_query_success(class freeQueryThread *thread);
@@ -103,11 +103,12 @@ private:
 
     QString from_date;
     QString to_date;
-
+    QStringList tableheader;
     QSemaphore mutex_cntfinish;
     int cnt_finish;
     int cnt_create;
     QStringList import_fields;
+    QVector<QStringList> records;
     QVector<bool> fields_onehot;
 
     QVector<pair<QPointF, QPointF> > grids;
