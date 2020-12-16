@@ -228,15 +228,16 @@ void graphDrawThread::traveltime_distribution() {
 void graphDrawThread::run() {
     switch(function){
         case 0:
-            qDebug()<<"0!";
             spatial_temporal();
             break;
         case 1:
             traveltime_distribution();
+            break;
         case 2:
             fee_distribution();
             break;
         default:
             spatial_temporal();
     }
+    quit();
 }

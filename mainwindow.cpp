@@ -6,7 +6,7 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow),mutex_db(1),mutex_cntfinish(1)
+    , ui(new Ui::MainWindow),mutex_db(1),mutex_cntfinish(1),mutex_filetoread(1),file_finished(0),file_to_read(0)
 {
      initBasicVisTab();
      initAdvancedTab();
@@ -49,23 +49,12 @@ void MainWindow::initPredictionTab() {
     timelayout->addWidget(predictboxes[4],1);
     predictboxes[4]->addItems(PREDICT_LIST);
 
-    QPushButton *button=new QPushButton;
-    timelayout->addWidget(button,0);
+    button_predict=new QPushButton;
+    button_predict->setText("Predict!");
+    button_predict->setEnabled(false);
+    timelayout->addWidget(button_predict,0);
     predictlayout->addLayout(timelayout,0);
-    connect(button,&QPushButton::clicked,[=](){
-        qDebug()<<button;
-        //button->setEnabled(false);
-        predictionThread *thread=new predictionThread(this);
-        thread->start();
-        qDebug()<<"create!";
-        connect(thread,&predictionThread::success,[=](predictionThread *thread){
-            qDebug()<<button;
-
-            button->setEnabled(true);
-            thread->exit(0);
-            thread->deleteLater();
-        });
-    });
+    connect(button_predict,&QPushButton::clicked,this,&MainWindow::predict);
     ui->tab_predict->setLayout(predictlayout);
 }
 
@@ -75,26 +64,12 @@ void MainWindow::initAdvancedTab() {
     QHBoxLayout *querylayout=new QHBoxLayout;
     queryedit=new QLineEdit;
     querylayout->addWidget(queryedit,1);
-    QPushButton *querybutton=new QPushButton;
-    querybutton->setText("Query!");
-    querylayout->addWidget(querybutton,0);
-    connect(querybutton,&QPushButton::clicked,[=](){
-        freeQueryThread *thread=new freeQueryThread(this);
-        thread->start();
-        querybutton->setEnabled(false);
-        records.clear();
-        tableheader.clear();
-        connect(thread,&freeQueryThread::success,[=](freeQueryThread *thread){
-            //querybutton->setEnabled(false);
-            querybutton->setEnabled(true);
-            thread->exit(0);
-            thread->deleteLater();
-            for(auto i=0;i<records.size();i++){
-                for(auto j=0;j<tableheader.size();j++) datatable->setItem(i,j,new QTableWidgetItem(records[i][j]));
-            }
+    button_query=new QPushButton;
+    button_query->setText("Query!");
+    querylayout->addWidget(button_query,0);
 
-        });
-    });
+    connect(button_query,&QPushButton::clicked,this, &MainWindow::freequery);
+    button_query->setEnabled(false);
     layout->addLayout(querylayout,0);
     datatable=new QTableWidget;
     layout->addWidget(datatable,1);
@@ -188,14 +163,15 @@ void MainWindow::initProgressBar() {
 
     bar->setMinimum(0);
     bar->setMaximum(100);
-    bar->setValue(100);
+    bar->setValue(0);
     bar->setVisible(true);
 
 
     progress=new QLabel(this);
-    progress->setText("Loading dataset...");
+    progress->setText("Loading dataset... (%0 finished)");
     ui->statusbar->addPermanentWidget(progress,0);
     progress->show();
+
 }
 
 MainWindow::~MainWindow()
@@ -237,21 +213,22 @@ void MainWindow::selectfile(){
         boxes[2]->addItem(str);
         thread->start();
         cnt_create++;
+
+        connect(thread, &fileReadThread::progress, this , &MainWindow::on_readfile_progress);
+        connect(thread, &fileReadThread::discover, this, & MainWindow::on_readfile_discover);
         connect(thread, &fileReadThread::success, [=](fileReadThread *thread){
-            //qDebug()<<QThread::currentThread();
-            //qDebug()<<thread->currentThread();
             bool flag=false;
             mutex_cntfinish.acquire();
             cnt_finish++;
-            //qDebug()<<(&threadrank);
-            //qDebug()<<cnt_finish<<" "<<threadrank;
             if(cnt_finish==cnt_create) flag=true;
             mutex_cntfinish.release();
             if(flag) {
                 qDebug()<<"All finished!";
                 button_draw->setEnabled(true);
+                button_query->setEnabled(true);
+                button_predict->setEnabled(true);
             }
-            //thread->deleteLater();
+            thread->deleteLater();
         });
     }
 
@@ -303,6 +280,7 @@ void MainWindow::draw() {
         QMessageBox msg;
         msg.setText("FROM equals TO! Please choose a period!");
         msg.exec();
+        button_draw->setEnabled(true);
         return;
     }
 
@@ -322,10 +300,12 @@ void MainWindow::draw() {
     }
     auto thread=new graphDrawThread(this,period=a*b, boxes[DRAW_FUNC]->currentIndex());
     connect(thread,&graphDrawThread::success,this,&MainWindow::plot);
+    connect(thread,&graphDrawThread::function_fail,this,&MainWindow::on_draw_function_fail);
     thread->start();
 }
 
-void MainWindow::plot() {
+void MainWindow::plot(graphDrawThread *thread) {
+
     button_draw->setEnabled(true);
     QChart *old=NULL;
     if(chart) {
@@ -346,6 +326,7 @@ void MainWindow::plot() {
             plot_fee();
             break;
     }
+    //thread->deleteLater();
 }
 
 void MainWindow::plot_traveltime() {
@@ -376,7 +357,7 @@ void MainWindow::plot_traveltime() {
     //y->setRange(0, max);
     y->setLabelFormat("%d");
 
-    series->setName("fee of order");
+    series->setName("travel time");
     chart->addSeries(series);
     chart->setAxisX(x, series);
     chart->setAxisY(y, series);
@@ -467,24 +448,102 @@ void MainWindow::plot_fee() {
     if (old) delete old;
 }
 
-/*void MainWindow::freequery() {
+void MainWindow::freequery() {
+    datatable->clear();
+    tableheader.clear();
+    records.clear();
+    button_query->setEnabled(false);
     freeQueryThread * thread=new freeQueryThread(this);
     thread->start();
     connect(thread, &freeQueryThread::success,this,&MainWindow::on_query_success);
+    connect(thread, &freeQueryThread::fail, this, &MainWindow::on_query_fail);
 }
 
 void MainWindow::predict() {
     //predictedit->clear();
+    button_predict->setEnabled(false);
+    if(timeedit->text().isEmpty()) {
+        QMessageBox msg;
+        msg.setText(QString("Please input the interested time point in form \"hh:mm\" !"));
+        msg.exec();
+        button_predict->setEnabled(true);
+        return;
+    }
     predictionThread *thread=new predictionThread(this);
     thread->start();
     connect(thread,&predictionThread::success,this,&MainWindow::on_predict_success);
+    connect(thread,&predictionThread::fail, this, &MainWindow::on_predict_fail);
 
 }
 
 void MainWindow::on_predict_success(class predictionThread *thread) {
+    qDebug()<<"Predict Finished!";
     thread->deleteLater();
+    button_predict->setEnabled(true);
 }
 
 void MainWindow::on_query_success(class freeQueryThread *thread) {
+
+    button_query->setEnabled(true);
+    qDebug()<<"Query Finished!";
+    for(auto i=0;i<records.size();i++){
+        //qDebug()<<records[i];
+        for(auto j=0;j<tableheader.size();j++) datatable->setItem(i,j,new QTableWidgetItem(records[i][j]));
+    }
     thread->deleteLater();
-}*/
+}
+
+void MainWindow::on_draw_function_fail(class graphDrawThread *thread, int function) {
+    QMessageBox msg;
+    /*qDebug()<<"Function: "<<function;
+    qDebug()<<"Function list:";
+    qDebug()<<FUNCTION_LIST[function];*/
+    msg.setText(QString("Task \"%1\" failed because related data fields were not imported.").arg(FUNCTION_LIST[function]));
+    msg.exec();
+    //qDebug()<<"Task "<<function<<": "<<boxes[DRAW_FUNC]->currentText()<<", failed because related data field was not imported";
+    button_draw->setEnabled(true);
+    thread->deleteLater();
+}
+
+void MainWindow::on_readfile_progress() {
+    qDebug()<<"Progress!";
+    float a;
+    mutex_filetoread.acquire();
+    mutex_cntfinish.acquire();
+    bar->setValue(a=100*(++file_finished)/file_to_read);
+    qDebug()<<a;
+    progress->setText(QString("Loading dataset... (%%1 finished)").arg(NUMBER(a)));
+    mutex_cntfinish.release();
+    mutex_filetoread.release();
+}
+
+void MainWindow::on_readfile_discover(int cntfile) {
+    mutex_filetoread.acquire();
+    file_to_read+=cntfile;
+    mutex_filetoread.release();
+}
+
+void MainWindow::on_predict_fail(class predictionThread *thread, int function) {
+    QMessageBox msg;
+    msg.setText(QString("Task \"%1\" failed becaue related data fields were not imported.").arg(PREDICT_LIST[function]));
+    msg.exec();
+    button_predict->setEnabled(true);
+    thread->deleteLater();
+}
+
+void MainWindow::on_query_fail(class freeQueryThread *thread, int reason) {
+    QMessageBox msg;
+    switch(reason){
+        case 0:
+            msg.setText("This function only supports SELECT instruction!");
+            break;
+        case 1:
+            msg.setText("SQL instruction execution error!");
+            break;
+        default:
+            msg.setText("Unknow error!");
+    }
+    msg.exec();
+    button_query->setEnabled(true);
+
+}

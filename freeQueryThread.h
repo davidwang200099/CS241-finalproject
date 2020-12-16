@@ -29,7 +29,7 @@ private:
     //bool parse(QString querystr,QStringList &header);
 signals:
     void success(freeQueryThread *thread);
-    void fail(freeQueryThread *thread);
+    void fail(freeQueryThread *thread, int reason);
 };
 
 

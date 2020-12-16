@@ -63,13 +63,18 @@ public:
 private:
     void checkDatabase();
     void selectfile();
-    //void freequery();
-    //void predict();
+    void freequery();
+    void predict();
     void on_read_success(class fileReadThread *thread);
     void on_predict_success(class predictionThread *thread);
+    void on_predict_fail(class predictionThread *thread, int function);
+    void on_query_fail(class freeQueryThread *thread, int reason);
     void on_query_success(class freeQueryThread *thread);
+    void on_draw_function_fail(class graphDrawThread *thread, int function);
+    void on_readfile_progress();
+    void on_readfile_discover(int cntfile);
     void draw();
-    void plot();
+    void plot(class graphDrawThread *thread);
     void plot_spatial_temporal();
     void plot_fee();
     void plot_traveltime();
@@ -91,6 +96,8 @@ private:
     QLineEdit *edit;
     QPushButton *button_file;
     QPushButton *button_draw;
+    QPushButton *button_predict;
+    QPushButton *button_query;
     QTableWidget *datatable;
     QTextEdit *predictedit;
     QLineEdit *queryedit;
@@ -108,7 +115,7 @@ private:
     int cnt_finish;
     int cnt_create;
     QStringList import_fields;
-    QVector<QStringList> records;
+    vector<vector<QString> > records;
     QVector<bool> fields_onehot;
 
     QVector<pair<QPointF, QPointF> > grids;
@@ -117,6 +124,10 @@ private:
     float grid_west;
     float grid_east;
 
+    int file_to_read;
+    int file_finished;
+    QSemaphore mutex_filetoread;
+    QSemaphore mutex_filefinished;
 };
 
 

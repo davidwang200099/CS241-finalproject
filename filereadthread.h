@@ -30,6 +30,8 @@ signals:
     void success(fileReadThread *thread);
     void suc(fileReadThread *thread, class MainWindow *window);
     void fail(fileReadThread *thread);
+    void progress();
+    void discover(int cnt_file);
 };
 
 #endif // FILEREADTHREAD_H

@@ -13,7 +13,6 @@ bool operator<(const order_t &order1, const order_t &order2){
 }
 
 void predictionThread::run() {
-
     db=this->window->db;
     window->mutex_db.acquire();
     qDebug()<<"Begin!";
@@ -28,9 +27,10 @@ void predictionThread::run() {
             predictTravelTime();
             break;
         default:
-            emit fail(this);
+            emit fail(this,-1);
     }
     window->mutex_db.release();
+    this->exit(0);
 }
 
 pair<int, int> getGridID(float north, float south, float west, float east, float lng, float lat){
@@ -45,11 +45,16 @@ pair<int, int> getGridID(float north, float south, float west, float east, float
 
 void predictionThread::predictDestination() {
     //window->predictedit->clear();
+    if(!(window->fields_onehot[3]&&window->fields_onehot[4]&&window->fields_onehot[5]&&window->fields_onehot[6])){
+        emit fail(this, 0);
+        return;
+    }
     QSqlQuery query(db);
     db.open();
     //QTime time=QTime::fromString(window->timeedit->text()+":00","hh:mm:ss");
     QString from_date=window->from_date;
     QString to_date=window->to_date;
+
     QString time_point=window->timeedit->text()+":00";
 
     int row=window->predictboxes[1]->currentIndex();
@@ -120,6 +125,8 @@ void predictionThread::predictDestination() {
 
 
 void predictionThread::predictTravelTime() {
+    if(!(window->fields_onehot[1]&&window->fields_onehot[2]&&window->fields_onehot[3]&&window->fields_onehot[4]&&window->fields_onehot[5]&&window->fields_onehot[6]))
+    {emit fail(this,1);return;}
     QSqlQuery query(db);
     db.open();
     //QTime time=QTime::fromString(window->timeedit->text()+":00","hh:mm:ss");

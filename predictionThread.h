@@ -22,7 +22,7 @@ private:
     void predictDestination();
 signals:
     void success(predictionThread *thread);
-    void fail(predictionThread *thread);
+    void fail(predictionThread *thread, int function);
 };
 
 

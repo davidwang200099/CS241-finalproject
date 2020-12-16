@@ -49,7 +49,7 @@ public:
         tabwidget->setSizePolicy(QSizePolicy::Maximum,QSizePolicy::Maximum);
         tabwidget->addTab(tab_basic,"Basic Visualization");
         tabwidget->addTab(tab_advanced,"Free Query");
-        tabwidget->addTab(tab_predict,"Advanced Visualization");
+        tabwidget->addTab(tab_predict,"Prediction");
         //QGridLayout *gridlayout=new QGridLayout();
         //gridlayout->addWidget(centralwidget,0,0,1,1);
         //MainWindow->setLayout(gridlayout);

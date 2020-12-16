@@ -61,6 +61,12 @@ void fileReadThread::run(){
 
     if(files.isEmpty()) {qDebug()<<re;return;}
     for(auto &filename:files) qDebug()<<filename;
+    /*window->mutex_filetoread.acquire();
+    window->file_to_read+=files.size();
+    window->mutex_filetoread.release();*/
+
+    emit discover(files.size());
+
 
     QString insert_sql=QString("INSERT INTO order_%1 VALUES(").arg(date);
     for(auto &filename:files){
@@ -95,17 +101,21 @@ void fileReadThread::run(){
             insert_sql=QString("INSERT INTO order_%1 VALUES(").arg(date);
         }
         qDebug()<<QString("Thread %1 has just read %2").arg(NUMBER(threadRank),filename);
+        /*window->mutex_filefinished.acquire();
+        window->file_finished++;
+        window->mutex_filefinished.release();*/
+        emit progress();
     }
 
 
-    mutex_db->acquire();
+    /*mutex_db->acquire();
     if(!query.exec(QString("SELECT * FROM order_%1").arg(date))) {
         qDebug() << QString("Thread %1 reads %2 select failed").arg(NUMBER(threadRank), date);
         mutex_db->release();
         return;
     }
     //while(query.next()) qDebug()<<query.value(0);
-    mutex_db->release();
+    mutex_db->release();*/
     qDebug()<<date<<" finished!";
     //db.close();
     emit success(this);

@@ -25,4 +25,7 @@
 #define FUNCTION_LIST QStringList{"Spatial-Temporal Data","Distribution of Travel Time","Distribution of Fee"}
 #define PREDICT_LIST QStringList{"Destination Prediction","Travel Time Prediction"}
 
+#define READONLY_ERROR 0
+#define SQL_EXEC_ERROR 1
+
 #endif //FINAL_CONSTANT_H
