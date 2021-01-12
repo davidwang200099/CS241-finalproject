@@ -27,7 +27,11 @@ FileSelectDialog::FileSelectDialog(MainWindow *window,QWidget *parent):
     buttonlayout->addWidget(button_file,0);
 
     button_file->setText("Select file");
+    button_file->setEnabled(true);
     connect(button_file, &QPushButton::clicked, this, &FileSelectDialog::selectFile);
+    connect(button_file, &QPushButton::clicked,[=](){
+        button_file->setEnabled(false);
+    });
     QPushButton *button_ok=new QPushButton();
     button_ok->setText("OK");
 
@@ -60,7 +64,7 @@ void FileSelectDialog::selectFile() {
     QTextStream in(&file);
     QStringList dataFields=in.readLine().trimmed().split(',');
     auto n_fields=dataFields.size();
-    QCheckBox **fieldboxes=new QCheckBox *[n_fields];
+    fieldboxes=new QCheckBox *[n_fields];
 
     for(int i=0;i<n_fields;i++) {
         window->import_fields.push_back(dataFields[i]);
@@ -81,7 +85,7 @@ void FileSelectDialog::selectFile() {
     filterlist.push_back(re);
     dir.setNameFilters(filterlist);
     auto entrylist=dir.entryList();
-    qDebug()<<entrylist.size();
+    //qDebug()<<entrylist.size();
 
     for(auto filename:entrylist){
         QString date=filename.split('_')[1];
@@ -117,11 +121,11 @@ bool FileSelectDialog::folderIsValid(QString dirname, QString &filename) {
     dir.setFilter(QDir::Files);
     dir.setSorting(QDir::Name);
     QStringList filelist=dir.entryList();
-    qDebug()<<filelist[0];
+    //qDebug()<<filelist[0];
     if(filelist[0].contains("order")) {
-        qDebug() << "Success!";
+        //qDebug() << "Success!";
         filename = dir.absoluteFilePath(filelist[0]);
-        qDebug() << filename;
+        //qDebug() << filename;
         return true;
     }else {
         filename="";

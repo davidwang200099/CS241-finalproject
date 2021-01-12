@@ -54,9 +54,9 @@ void graphDrawThread::spatial_temporal() {
                     NUMBER(lefttop.x()),NUMBER(rightbottom.x()),
                     NUMBER(rightbottom.y()),NUMBER(lefttop.y())
             );
-            qDebug()<<select_query;
+            //qDebug()<<select_query;
             auto r=query.exec(select_query);
-            qDebug()<<r;
+            //qDebug()<<r;
             if(!r) qDebug()<<query.lastError();
             while (query.next()) {
                 int unix_stamp = query.value(0).toInt();
@@ -66,16 +66,16 @@ void graphDrawThread::spatial_temporal() {
                 if (rank >= ssize|| rank<0) continue;
                 window->order_by_period[rank]++;
             }
-            qDebug()<<rst;
+            //qDebug()<<rst;
         }
     }
     else {
         for (auto i = startdate; i <= enddate; i = i.addDays(1)) {
             QString select_query = QString("SELECT departure_time FROM order_%1 ").arg(
                     i.toString("yyyyMMdd"));
-            qDebug() << select_query;
+            //qDebug() << select_query;
             auto r = query.exec(select_query);
-            qDebug() << r;
+            //qDebug() << r;
             if (!r) qDebug() << query.lastError();
             while (query.next()) {
                 int unix_stamp = query.value(0).toInt();
@@ -112,7 +112,7 @@ void graphDrawThread::fee_distribution() {
     auto i2=window->boxes[LAT]->currentIndex()-1;
     if(window->fields_onehot[3]&&window->fields_onehot[4]&&i1>=0&&i2>=0){
         auto gridrank=i1+i2*10;
-        qDebug()<<gridrank;
+        //qDebug()<<gridrank;
         QPointF lefttop=window->grids[gridrank].first;
         QPointF rightbottom=window->grids[gridrank].second;
         auto rst=0;
@@ -126,9 +126,9 @@ void graphDrawThread::fee_distribution() {
                     NUMBER(rightbottom.y()),NUMBER(lefttop.y()),
                     NUMBER(startdatetime.toTime_t()),NUMBER(enddatetime.toTime_t())
             );
-            qDebug()<<select_query;
+            //qDebug()<<select_query;
             auto r=query.exec(select_query);
-            qDebug()<<r;
+            //qDebug()<<r;
             if(!r) qDebug()<<query.lastError();
             while (query.next()) {
                 rst++;
@@ -137,16 +137,16 @@ void graphDrawThread::fee_distribution() {
                 if (rank >= ssize|| rank<0) continue;
                 window->order_by_fee[rank]++;
             }
-            qDebug()<<rst;
+            //qDebug()<<rst;
         }
     }else{
         for (auto i = startdate; i <= enddate; i = i.addDays(1)) {
             QString select_query = QString("SELECT fee FROM order_%1 "
                                                "WHERE departure_time >= %2 and departure_time < %3").arg(
                     i.toString("yyyyMMdd"), NUMBER(startdatetime.toTime_t()), NUMBER(enddatetime.toTime_t()));
-            qDebug() << select_query;
+            //qDebug() << select_query;
             auto r = query.exec(select_query);
-            qDebug() << r;
+            //qDebug() << r;
             if (!r) qDebug() << query.lastError();
             while (query.next()) {
                 //qDebug()<<unix_stamp;
@@ -178,7 +178,7 @@ void graphDrawThread::traveltime_distribution() {
     auto i2=window->boxes[LAT]->currentIndex()-1;
     if(window->fields_onehot[3]&&window->fields_onehot[4]&&i1>=0&&i2>=0){
         auto gridrank=i1+i2*10;
-        qDebug()<<gridrank;
+        //qDebug()<<gridrank;
         QPointF lefttop=window->grids[gridrank].first;
         QPointF rightbottom=window->grids[gridrank].second;
         auto rst=0;
@@ -192,9 +192,9 @@ void graphDrawThread::traveltime_distribution() {
                     NUMBER(rightbottom.y()),NUMBER(lefttop.y()),
                     NUMBER(startdatetime.toTime_t()),NUMBER(enddatetime.toTime_t())
             );
-            qDebug()<<select_query;
+            //qDebug()<<select_query;
             auto r=query.exec(select_query);
-            qDebug()<<r;
+            //qDebug()<<r;
             if(!r) qDebug()<<query.lastError();
             while (query.next()) {
                 rst++;
@@ -203,16 +203,16 @@ void graphDrawThread::traveltime_distribution() {
                 if (rank >= ssize|| rank<0) continue;
                 window->order_by_traveltime[rank]++;
             }
-            qDebug()<<rst;
+            //qDebug()<<rst;
         }
     }else{
         for (auto i = startdate; i <= enddate; i = i.addDays(1)) {
             QString select_query = QString("SELECT departure_time,end_time FROM order_%1 "
                                            "WHERE departure_time >= %2 and departure_time < %3").arg(
                     i.toString("yyyyMMdd"), NUMBER(startdatetime.toTime_t()), NUMBER(enddatetime.toTime_t()));
-            qDebug() << select_query;
+            //qDebug() << select_query;
             auto r = query.exec(select_query);
-            qDebug() << r;
+            //qDebug() << r;
             if (!r) qDebug() << query.lastError();
             while (query.next()) {
                 //qDebug()<<unix_stamp;

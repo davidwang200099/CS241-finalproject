@@ -30,6 +30,7 @@ public:
     QComboBox *from;
     QComboBox *to;
     MainWindow *window;
+    QCheckBox **fieldboxes;
 };
 
 

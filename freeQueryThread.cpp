@@ -5,7 +5,7 @@ void freeQueryThread::run() {
 
 
     QString querystr=this->window->queryedit->text().simplified();
-    qDebug()<<querystr;
+    //qDebug()<<querystr;
 
     if(!querystr.startsWith("SELECT",Qt::CaseInsensitive)) {emit fail(this,READONLY_ERROR);return;}
     QSqlDatabase db=window->db;
@@ -35,7 +35,7 @@ void freeQueryThread::run() {
         for(int i=0;i<num_column;i++) l.push_back(QString(query.value(i).toString()));
         window->records.push_back(l);
     }
-    qDebug()<<cnt;
+    //qDebug()<<cnt;
     window->datatable->setColumnCount(num_column);
     window->datatable->setRowCount(window->records.size()+1);
 

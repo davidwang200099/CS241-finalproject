@@ -32,10 +32,10 @@ void fileReadThread::run(){
     auto _size=window->import_fields.size();
     for(int i=1;i<_size;i++) {
         if(window->fields_onehot[i]) create_sql+=","+query_list[i-1];
-        qDebug()<<query_list[i-1];
+        //qDebug()<<query_list[i-1];
     }
     create_sql+=")";
-    qDebug()<<create_sql;
+    //qDebug()<<create_sql;
 
     mutex_db->acquire();
 
@@ -57,10 +57,10 @@ void fileReadThread::run(){
     dir.setSorting(QDir::Name);
     QStringList files=dir.entryList();
 
-    qDebug()<<files.size();
+    //qDebug()<<files.size();
 
     if(files.isEmpty()) {qDebug()<<re;return;}
-    for(auto &filename:files) qDebug()<<filename;
+    //for(auto &filename:files) qDebug()<<filename;
     /*window->mutex_filetoread.acquire();
     window->file_to_read+=files.size();
     window->mutex_filetoread.release();*/

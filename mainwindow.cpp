@@ -35,7 +35,7 @@ void MainWindow::initPredictionTab() {
     toplacelayout->addWidget(predictboxes[3],1);
 
     for(int i=0;i<4;i++){
-        qDebug()<<i;
+        //qDebug()<<i;
         for(int j=0;j<10;j++) predictboxes[i]->addItem(NUMBER(j));
     }
 
@@ -150,9 +150,9 @@ void MainWindow::initBasicVisTab() {
     cnt_finish=0;
     cnt_create=0;
 
-    qDebug()<<"centralwidget: "<<ui->centralwidget->size();
-    qDebug()<<"tabwidget: "<<ui->tabwidget->size();
-    qDebug()<<"tab_basic: "<<ui->tab_basic->size();
+    //qDebug()<<"centralwidget: "<<ui->centralwidget->size();
+    //qDebug()<<"tabwidget: "<<ui->tabwidget->size();
+    //qDebug()<<"tab_basic: "<<ui->tab_basic->size();
 }
 
 void MainWindow::initProgressBar() {
@@ -344,11 +344,11 @@ void MainWindow::plot_traveltime() {
                                "yyyy-MM-dd-hh:mm:ss");
 
     int max = -1;
-    for(int i=0;i<order_by_fee.size();i++) {
+    for(int i=0;i<order_by_traveltime.size();i++) {
         qDebug() << order_by_traveltime[i];
-        if (order_by_fee[i] > max) max = order_by_traveltime[i];
+        if (order_by_traveltime[i] > max) max = order_by_traveltime[i];
 
-        series->append(i, order_by_traveltime[i]);
+        series->append(i*300, order_by_traveltime[i]);
     }
 
     QValueAxis *x=new QValueAxis;
@@ -356,7 +356,7 @@ void MainWindow::plot_traveltime() {
     QValueAxis *y = new QValueAxis;
     //y->setRange(0, max);
     y->setLabelFormat("%d");
-
+    y->setMax(max*1.2);
     series->setName("travel time");
     chart->addSeries(series);
     chart->setAxisX(x, series);
@@ -397,7 +397,7 @@ void MainWindow::plot_spatial_temporal() {
     QValueAxis *y = new QValueAxis;
     //y->setRange(0, max);
     y->setLabelFormat("%d");
-
+    y->setMax(max*1.2);
     series->setName("num. of order");
     chart->addSeries(series);
     chart->setAxisX(x, series);
@@ -437,7 +437,8 @@ void MainWindow::plot_fee() {
     QValueAxis *y = new QValueAxis;
     //y->setRange(0, max);
     y->setLabelFormat("%d");
-
+    y->setMax(max*1.2);
+    //y->setMax(max/10)
     series->setName("fee of order");
     chart->addSeries(series);
     chart->setAxisX(x, series);
