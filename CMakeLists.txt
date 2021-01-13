@@ -8,7 +8,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} /Users/macbookpro/Qt/5.15.2/clang_64/lib/cmake)
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${QT_HOME}/${VERSION_OF_QT}/clang_64/lib/cmake)
 
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5Sql REQUIRED)
